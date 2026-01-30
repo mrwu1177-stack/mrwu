@@ -238,7 +238,7 @@
     }
 
     .market-data-content.active {
-      display: block;
+      display: flex;
     }
 
     /* 市场概览子标签切换 */
@@ -439,6 +439,42 @@
         column-count: 1;
       }
     }
+
+    /* 弹窗表格样式 */
+    .modal-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .modal-data-table thead {
+      position: sticky;
+      top: 0;
+      background: #1e2329;
+      z-index: 10;
+    }
+
+    .modal-data-table th {
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      color: #848e9c;
+      border-bottom: 1px solid #2b3139;
+      white-space: nowrap;
+    }
+
+    .modal-data-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #2b3139;
+    }
+
+    .modal-data-table tbody tr:hover {
+      background: rgba(252, 213, 53, 0.05);
+    }
+
+    .modal-data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -586,6 +622,7 @@
         <div class="flex items-center gap-2 mb-4">
           <button onclick="switchRankingType('top')" id="ranking-tab-top" class="ranking-tab active text-xs px-3 py-1.5 rounded-lg font-medium transition-all">涨幅榜</button>
           <button onclick="switchRankingType('bottom')" id="ranking-tab-bottom" class="ranking-tab text-xs px-3 py-1.5 rounded-lg font-medium transition-all">跌幅榜</button>
+          <button onclick="switchRankingType('active')" id="ranking-tab-active" class="ranking-tab text-xs px-3 py-1.5 rounded-lg font-medium transition-all">活跃榜</button>
         </div>
 
         <!-- 排行榜内容 -->
@@ -1038,6 +1075,8 @@
           sortedCoins.sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
         } else if (currentRankingType === 'bottom') {
           sortedCoins.sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
+        } else if (currentRankingType === 'active') {
+          sortedCoins.sort((a, b) => (b.total_volume || 0) - (a.total_volume || 0));
         } else {
           sortedCoins.sort((a, b) => (a.market_cap || 0) - (b.market_cap || 0));
         }
