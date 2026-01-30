@@ -475,6 +475,66 @@
     .modal-data-table tbody tr:last-child td {
       border-bottom: none;
     }
+
+    /* 清算图输入框样式 */
+    #liquidationCoinInput:focus {
+      border-color: #fcd535;
+      box-shadow: 0 0 0 2px rgba(252, 213, 53, 0.1);
+    }
+
+    /* 杠杆按钮样式 */
+    .leverage-btn {
+      background: #2b3139;
+      border: 1px solid #474d57;
+      color: #848e9c;
+      transition: all 0.3s ease;
+    }
+
+    .leverage-btn:hover {
+      background: #363c44;
+      color: #eaecef;
+    }
+
+    .leverage-btn.active {
+      background: linear-gradient(135deg, #f99d1c 0%, #fcd535 100%);
+      border-color: transparent;
+      color: #0b0e11;
+      box-shadow: 0 4px 15px rgba(249, 157, 28, 0.3);
+      font-weight: 600;
+    }
+
+    /* 10x 杠杆颜色 */
+    .leverage-btn[data-leverage="10x"].active {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    /* 25x 杠杆颜色 */
+    .leverage-btn[data-leverage="25x"].active {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    /* 50x 杠杆颜色 */
+    .leverage-btn[data-leverage="50x"].active {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    /* 100x 杠杆颜色 */
+    .leverage-btn[data-leverage="100x"].active {
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    /* 所有 杠杆颜色 */
+    .leverage-btn[data-leverage="all"].active {
+      background: linear-gradient(135deg, #f99d1c 0%, #fcd535 100%);
+      border-color: transparent;
+      color: #0b0e11;
+      box-shadow: 0 4px 15px rgba(249, 157, 28, 0.3);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -518,6 +578,106 @@
         </div>
       </div>
     </header>
+
+    <!-- 市场异动监控（标题板块下方） -->
+    <div class="glass-card p-6 fade-in mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <h2 class="text-xl font-bold text-white">市场异动监控</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- 爆仓监控 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'liquidation')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            爆仓监控
+          </h3>
+          <div id="liquidationContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 大单异动 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'whale')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            大单异动
+          </h3>
+          <div id="whaleContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 资金费率 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'funding')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+            资金费率
+          </h3>
+          <div id="fundingContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 未平仓合约 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'oi')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            未平仓合约
+          </h3>
+          <div id="oiContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 订单簿深度 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'orderbook')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+            订单簿深度
+          </h3>
+          <div id="orderbookContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 价格波动率 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'volatility')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            价格波动率
+          </h3>
+          <div id="volatilityContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 24h高低点 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'highlow')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            24h高低点
+          </h3>
+          <div id="highlowContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+
+        <!-- 成交量分析 -->
+        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'volume')">
+          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+            成交量分析
+          </h3>
+          <div id="volumeContent" class="space-y-2 text-xs">
+            <p class="text-slate-400">加载中...</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 四列布局 -->
     <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-6">
@@ -651,102 +811,157 @@
 
     </div>
 
-    <!-- 市场异动监控（三列下方，卡片布局） -->
+    <!-- 爆仓清算图 -->
     <div class="glass-card p-6 fade-in mb-6">
-      <div class="flex items-center gap-3 mb-4">
-        <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        </svg>
-        <h2 class="text-xl font-bold text-white">市场异动监控</h2>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+          <h2 class="text-xl font-bold text-white">爆仓清算图</h2>
+          <input
+            type="text"
+            id="liquidationCoinInput"
+            placeholder="交易对 (如 BTC)"
+            value="BTC"
+            class="ml-4 px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 w-32 transition-all"
+          />
+          <button
+            onclick="loadCustomLiquidationCoin()"
+            class="text-xs px-4 py-1.5 rounded-lg font-medium transition-all bg-gradient-to-r from-yellow-500 to-amber-500 text-black hover:from-yellow-400 hover:to-amber-400 font-semibold"
+          >
+            加载
+          </button>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <!-- 爆仓监控 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'liquidation')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-red-500"></span>
-            爆仓监控
-          </h3>
-          <div id="liquidationContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
+      <!-- 杠杆切换按钮 -->
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <button
+          id="leverage-all"
+          onclick="switchLeverage('all')"
+          class="leverage-btn text-xs px-4 py-2 rounded-lg font-medium transition-all"
+          data-leverage="all"
+        >
+          所有
+        </button>
+        <button
+          id="leverage-10x"
+          onclick="switchLeverage('10x')"
+          class="leverage-btn text-xs px-4 py-2 rounded-lg font-medium transition-all"
+          data-leverage="10x"
+        >
+          10x
+        </button>
+        <button
+          id="leverage-25x"
+          onclick="switchLeverage('25x')"
+          class="leverage-btn text-xs px-4 py-2 rounded-lg font-medium transition-all"
+          data-leverage="25x"
+        >
+          25x
+        </button>
+        <button
+          id="leverage-50x"
+          onclick="switchLeverage('50x')"
+          class="leverage-btn text-xs px-4 py-2 rounded-lg font-medium transition-all"
+          data-leverage="50x"
+        >
+          50x
+        </button>
+        <button
+          id="leverage-100x"
+          onclick="switchLeverage('100x')"
+          class="leverage-btn text-xs px-4 py-2 rounded-lg font-medium transition-all"
+          data-leverage="100x"
+        >
+          100x
+        </button>
+      </div>
+
+      <!-- 清算图容器 -->
+      <div id="liquidationChartContainer" class="relative h-[400px] bg-slate-900/50 rounded-lg overflow-hidden border border-slate-700/50">
+        <canvas id="liquidationChart" class="w-full h-full"></canvas>
+
+        <!-- 悬浮提示 -->
+        <div id="liquidationTooltip" class="absolute hidden bg-slate-900/95 backdrop-blur-sm border border-slate-700 rounded-lg p-3 pointer-events-none z-20 shadow-2xl" style="min-width: 180px;">
+          <div class="flex items-center justify-between mb-2">
+            <span id="tooltipPrice" class="text-sm font-bold text-white">$82,382</span>
+            <span id="tooltipPercent" class="text-xs text-slate-400">0.00%</span>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-green-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                多单持仓
+              </span>
+              <span id="tooltipLongValue" class="text-white font-medium">125.5M</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-red-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                空单持仓
+              </span>
+              <span id="tooltipShortValue" class="text-white font-medium">87.3M</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- 大单异动 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'whale')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-            大单异动
-          </h3>
-          <div id="whaleContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
+      <!-- 价格区间选择器 -->
+      <div class="mt-4 px-2">
+        <div class="relative h-10 bg-slate-800/50 rounded-lg border border-slate-700">
+          <!-- 价格刻度背景 -->
+          <div class="absolute inset-0 flex justify-between px-4 items-center text-[10px] text-slate-500 font-mono">
+            <span id="rangeLeftPrice">80,000</span>
+            <span id="rangeRightPrice">94,000</span>
+          </div>
+
+          <!-- 范围高亮区域 -->
+          <div
+            id="rangeHighlight"
+            class="absolute h-full bg-yellow-500/10 border-l-2 border-r-2 border-yellow-500/50 rounded"
+            style="left: 0%; width: 100%;"
+          ></div>
+
+          <!-- 左滑块 -->
+          <div
+            id="rangeLeftHandle"
+            class="absolute top-0 bottom-0 w-6 cursor-ew-resize z-10 flex items-center justify-center hover:bg-yellow-500/20 transition-all"
+            style="left: 0%;"
+          >
+            <div class="w-1 h-8 bg-yellow-500 rounded-full"></div>
+          </div>
+
+          <!-- 右滑块 -->
+          <div
+            id="rangeRightHandle"
+            class="absolute top-0 bottom-0 w-6 cursor-ew-resize z-10 flex items-center justify-center hover:bg-yellow-500/20 transition-all"
+            style="left: 100%;"
+          >
+            <div class="w-1 h-8 bg-yellow-500 rounded-full"></div>
           </div>
         </div>
+      </div>
 
-        <!-- 资金费率 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'funding')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-            资金费率
-          </h3>
-          <div id="fundingContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
+      <!-- 底部信息栏 -->
+      <div class="flex items-center justify-between mt-4 px-2">
+        <div class="flex items-center gap-6 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-sm bg-gradient-to-t from-green-500 to-green-400"></span>
+            <span class="text-slate-400">多单持仓</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-sm bg-gradient-to-t from-red-500 to-red-400"></span>
+            <span class="text-slate-400">空单持仓</span>
           </div>
         </div>
-
-        <!-- 未平仓合约 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'oi')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            未平仓合约
-          </h3>
-          <div id="oiContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
-          </div>
-        </div>
-
-        <!-- 订单簿深度 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'orderbook')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-            订单簿深度
-          </h3>
-          <div id="orderbookContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
-          </div>
-        </div>
-
-        <!-- 价格波动率 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'volatility')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-            价格波动率
-          </h3>
-          <div id="volatilityContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
-          </div>
-        </div>
-
-        <!-- 24h高低点 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'highlow')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-            24h高低点
-          </h3>
-          <div id="highlowContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
-          </div>
-        </div>
-
-        <!-- 成交量分析 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'volume')">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-pink-500"></span>
-            成交量分析
-          </h3>
-          <div id="volumeContent" class="space-y-2 text-xs">
-            <p class="text-slate-400">加载中...</p>
-          </div>
+        <div class="flex items-center gap-4 text-xs">
+          <span class="text-slate-500">当前价格:</span>
+          <span id="liquidationCurrentPrice" class="text-yellow-400 font-mono font-bold">82,382</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-slate-500">更新时间:</span>
+          <span id="liquidationUpdateTime" class="text-slate-400 font-mono">--:--:--</span>
         </div>
       </div>
     </div>
@@ -763,6 +978,24 @@
     let currentNewsType = 'latest';
     let currentRankingType = 'top';
     let currentStrategyTab = 'signal';
+    let currentLiquidationCoin = 'BTC';
+    let currentLeverage = '25x';  // 默认选择25x杠杆
+    let liquidationData = {};
+
+    // 价格区间配置
+    let priceRange = {
+      min: 80000,
+      max: 94000,
+      current: 82382
+    };
+
+    // 杠杆颜色配置
+    const leverageColors = {
+      '10x': { primary: '#3b82f6', gradient: ['#3b82f6', '#60a5fa'] },
+      '25x': { primary: '#8b5cf6', gradient: ['#8b5cf6', '#a78bfa'] },
+      '50x': { primary: '#f59e0b', gradient: ['#f59e0b', '#fbbf24'] },
+      '100x': { primary: '#ef4444', gradient: ['#ef4444', '#f87171'] }
+    };
 
     // ==================== 初始化 ====================
     document.addEventListener('DOMContentLoaded', () => {
@@ -771,6 +1004,11 @@
       setInterval(loadAllData, 30000); // 每30秒刷新一次数据
       updateLastUpdateTime();
       setInterval(updateLastUpdateTime, 1000);
+
+      // 初始化价格区间选择器
+      setTimeout(() => {
+        initPriceRangeSlider();
+      }, 1000);
     });
 
     // ==================== 粒子背景 ====================
@@ -806,7 +1044,8 @@
           loadStrategySignal(),
           loadStrategyMulticoin(),
           loadStrategyBollinger(),
-          loadMarketAnomalyData()
+          loadMarketAnomalyData(),
+          loadLiquidationMap()
         ]);
       } catch (error) {
         console.error('加载数据失败:', error);
@@ -1014,6 +1253,763 @@
         modal.classList.add('hidden');
         document.body.style.overflow = '';
       }, 300);
+    }
+
+    // ==================== 清算图功能 ====================
+    function loadCustomLiquidationCoin() {
+      const input = document.getElementById('liquidationCoinInput');
+      const coin = input.value.trim().toUpperCase();
+
+      if (!coin) {
+        alert('请输入交易对代码');
+        return;
+      }
+
+      currentLiquidationCoin = coin;
+
+      // 重新加载清算图
+      loadLiquidationMap();
+    }
+
+    async function loadLiquidationMap() {
+      try {
+        console.log(`🔄 开始加载清算数据: ${currentLiquidationCoin}`);
+
+        // 生成清算数据（从Binance获取真实价格）
+        liquidationData = await generateLiquidationData(currentLiquidationCoin);
+
+        // 绘制清算图
+        drawLiquidationChart();
+
+        // 更新当前价格
+        updateCurrentPrice();
+
+        // 初始化杠杆按钮
+        initLeverageButtons();
+
+        console.log(`✅ 清算图加载完成`);
+      } catch (error) {
+        console.error('加载清算图失败:', error);
+        // 显示错误提示
+        const errorContainer = document.getElementById('liquidationChartContainer');
+        if (errorContainer) {
+          errorContainer.innerHTML = `
+            <div class="flex items-center justify-center h-full text-slate-400">
+              <div class="text-center">
+                <svg class="w-12 h-12 mx-auto mb-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm">加载清算数据失败</p>
+                <p class="text-xs mt-1">请检查网络连接或稍后重试</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function switchLeverage(leverage) {
+      currentLeverage = leverage;
+
+      // 更新按钮状态
+      document.querySelectorAll('.leverage-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-leverage') === leverage) {
+          btn.classList.add('active');
+        }
+      });
+
+      // 重新绘制图表
+      if (leverage === 'all') {
+        // 聚合所有杠杆的数据
+        if (liquidationData.leverageData) {
+          drawLiquidationChart();
+        }
+      } else if (liquidationData.leverageData && liquidationData.leverageData[leverage]) {
+        drawLiquidationChart();
+      }
+    }
+
+    function initLeverageButtons() {
+      // 设置默认激活的杠杆按钮
+      document.querySelectorAll('.leverage-btn').forEach(btn => {
+        if (btn.getAttribute('data-leverage') === currentLeverage) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    function initPriceRangeSlider() {
+      const rangeLeftHandle = document.getElementById('rangeLeftHandle');
+      const rangeRightHandle = document.getElementById('rangeRightHandle');
+      const rangeHighlight = document.getElementById('rangeHighlight');
+      const rangeSlider = rangeLeftHandle.parentElement;
+
+      if (!rangeLeftHandle || !rangeRightHandle || !rangeHighlight || !rangeSlider) {
+        console.warn('价格区间选择器元素不存在');
+        return;
+      }
+
+      let isDragging = false;
+      let currentHandle = null;
+
+      const updateRange = () => {
+        const leftPercent = parseFloat(rangeLeftHandle.style.left);
+        const rightPercent = parseFloat(rangeRightHandle.style.left);
+
+        // 确保左滑块不大于右滑块
+        const actualLeftPercent = Math.min(leftPercent, rightPercent - 10);
+        const actualRightPercent = Math.max(rightPercent, leftPercent + 10);
+
+        rangeLeftHandle.style.left = actualLeftPercent + '%';
+        rangeRightHandle.style.left = actualRightPercent + '%';
+        rangeHighlight.style.left = actualLeftPercent + '%';
+        rangeHighlight.style.width = (actualRightPercent - actualLeftPercent) + '%';
+
+        // 更新价格显示
+        const leftPrice = priceRange.min + (priceRange.max - priceRange.min) * (actualLeftPercent / 100);
+        const rightPrice = priceRange.min + (priceRange.max - priceRange.min) * (actualRightPercent / 100);
+
+        const rangeLeftPrice = document.getElementById('rangeLeftPrice');
+        const rangeRightPrice = document.getElementById('rangeRightPrice');
+
+        if (rangeLeftPrice) {
+          rangeLeftPrice.textContent = (leftPrice / 1000).toFixed(0) + 'K';
+        }
+        if (rangeRightPrice) {
+          rangeRightPrice.textContent = (rightPrice / 1000).toFixed(0) + 'K';
+        }
+
+        // 更新全局价格范围（用于放大显示）
+        priceRange.displayMin = leftPrice;
+        priceRange.displayMax = rightPrice;
+
+        // 重新绘制图表以显示选定区间
+        drawLiquidationChart();
+      };
+
+      const handleMouseDown = (e, handle) => {
+        isDragging = true;
+        currentHandle = handle;
+        e.preventDefault();
+      };
+
+      const handleMouseMove = (e) => {
+        if (!isDragging || !currentHandle) return;
+
+        const rect = rangeSlider.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+
+        currentHandle.style.left = percent + '%';
+        updateRange();
+      };
+
+      const handleMouseUp = () => {
+        isDragging = false;
+        currentHandle = null;
+      };
+
+      // 左滑块事件
+      rangeLeftHandle.addEventListener('mousedown', (e) => handleMouseDown(e, rangeLeftHandle));
+      rangeRightHandle.addEventListener('mousedown', (e) => handleMouseDown(e, rangeRightHandle));
+
+      // 全局鼠标移动和释放事件
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      // 触摸事件支持
+      rangeLeftHandle.addEventListener('touchstart', (e) => handleMouseDown(e, rangeLeftHandle));
+      rangeRightHandle.addEventListener('touchstart', (e) => handleMouseDown(e, rangeRightHandle));
+      document.addEventListener('touchmove', handleMouseMove);
+      document.addEventListener('touchend', handleMouseUp);
+
+      // 初始化范围高亮
+      rangeHighlight.style.left = '0%';
+      rangeHighlight.style.width = '100%';
+    }
+
+    // ==================== 清算估算算法 ====================
+
+    /**
+     * 获取Binance实时价格
+     */
+    async function getBinancePrice(symbol) {
+      try {
+        const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`);
+        const data = await response.json();
+        return parseFloat(data.price);
+      } catch (error) {
+        console.error('获取Binance价格失败:', error);
+        // 返回默认价格
+        const priceMap = {
+          'BTC': 82382,
+          'ETH': 3245.80,
+          'SOL': 218.75,
+          'BNB': 615.20,
+          'XRP': 2.15,
+          'ADA': 0.52,
+          'DOGE': 0.0876,
+          'AVAX': 35.20,
+          'LINK': 14.85,
+          'DOT': 6.95,
+          'MATIC': 0.78
+        };
+        return priceMap[symbol] || 82382;
+      }
+    }
+
+    /**
+     * 估算清算分布数据
+     * 基于价格波动和杠杆倍数计算每个价格点的清算强度
+     */
+    function calculateLiquidationDistribution(basePrice, prices, marketTrend = 'neutral') {
+      const leverageConfig = {
+        '10x': { volatility: 0.8, baseOI: 0.3, sensitivity: 0.5 },
+        '25x': { volatility: 1.0, baseOI: 0.4, sensitivity: 0.7 },
+        '50x': { volatility: 1.3, baseOI: 0.5, sensitivity: 0.9 },
+        '100x': { volatility: 1.6, baseOI: 0.6, sensitivity: 1.1 }
+      };
+
+      const distribution = {};
+      const leverages = ['10x', '25x', '50x', '100x'];
+
+      // 计算价格波动率
+      const priceVolatility = calculatePriceVolatility(prices, basePrice);
+
+      leverages.forEach(leverage => {
+        const config = leverageConfig[leverage];
+        distribution[leverage] = {};
+
+        prices.forEach(price => {
+          const priceDiff = price - basePrice;
+          const percentDiff = priceDiff / basePrice;
+
+          // 根据市场趋势调整清算分布
+          let trendFactor = 1;
+          if (marketTrend === 'bullish' && priceDiff > 0) {
+            trendFactor = 1.2;  // 牛市：上方清算更多
+          } else if (marketTrend === 'bearish' && priceDiff < 0) {
+            trendFactor = 1.2;  // 熊市：下方清算更多
+          }
+
+          // 计算多单清算（价格上涨时爆仓）
+          // 多单在价格下跌时爆仓，所以关注价格低于当前价格的部分
+          let longLiquidation = 0;
+          if (priceDiff < 0) {
+            const liquidationProb = Math.exp(-Math.abs(percentDiff) * config.sensitivity * priceVolatility);
+            longLiquidation = config.baseOI * 100 * liquidationProb * config.volatility * trendFactor;
+          }
+
+          // 计算空单清算（价格下跌时爆仓）
+          // 空单在价格上涨时爆仓，所以关注价格高于当前价格的部分
+          let shortLiquidation = 0;
+          if (priceDiff > 0) {
+            const liquidationProb = Math.exp(-Math.abs(percentDiff) * config.sensitivity * priceVolatility);
+            shortLiquidation = config.baseOI * 100 * liquidationProb * config.volatility * trendFactor;
+          }
+
+          // 添加随机波动，使图表更真实
+          const noise = (Math.random() - 0.5) * 20;
+          longLiquidation = Math.max(0, longLiquidation + noise);
+          shortLiquidation = Math.max(0, shortLiquidation + noise);
+
+          // 按CoinGlass格式存储：[清算价格, 清算金额, 杠杆倍数]
+          if (!distribution[leverage][price]) {
+            distribution[leverage][price] = [];
+          }
+
+          // 只添加非零的清算数据
+          if (longLiquidation > 0 || shortLiquidation > 0) {
+            const leverageMultiplier = parseInt(leverage);
+            distribution[leverage][price].push([
+              price,
+              longLiquidation + shortLiquidation,  // 清算总金额
+              leverageMultiplier,
+              null
+            ]);
+          }
+        });
+      });
+
+      return distribution;
+    }
+
+    /**
+     * 计算价格波动率
+     */
+    function calculatePriceVolatility(prices, basePrice) {
+      if (prices.length < 2) return 1;
+
+      let totalChange = 0;
+      for (let i = 1; i < prices.length; i++) {
+        totalChange += Math.abs(prices[i] - prices[i - 1]) / prices[i - 1];
+      }
+
+      const avgChange = totalChange / (prices.length - 1);
+      return Math.max(0.5, Math.min(2.0, avgChange * 50));  // 限制在0.5-2.0之间
+    }
+
+    /**
+     * 生成清算图数据（按CoinGlass格式）
+     */
+    async function generateLiquidationData(coin) {
+      try {
+        // 从Binance获取真实价格
+        const basePrice = await getBinancePrice(coin);
+
+        // 生成价格序列（基于价格波动范围）
+        const priceRangePercent = 0.15;  // ±15%的价格范围
+        const minPrice = basePrice * (1 - priceRangePercent);
+        const maxPrice = basePrice * (1 + priceRangePercent);
+        const numPoints = 80;  // 价格点数量
+
+        const prices = [];
+        for (let i = 0; i < numPoints; i++) {
+          const price = minPrice + (maxPrice - minPrice) * (i / (numPoints - 1));
+          prices.push(Math.round(price * 100) / 100);  // 保留2位小数
+        }
+
+        // 估算市场趋势（基于最近的模拟数据）
+        // 在实际应用中，这里应该使用真实的市场数据
+        const marketTrend = Math.random() > 0.5 ? 'bullish' : 'bearish';
+
+        // 计算清算分布
+        const liquidationDistribution = calculateLiquidationDistribution(basePrice, prices, marketTrend);
+
+        // 转换为绘制图表需要的格式
+        const leverageData = {};
+        leverages.forEach(leverage => {
+          leverageData[leverage] = {
+            longPositions: [],
+            shortPositions: [],
+            maxOI: 0
+          };
+        });
+
+        // 遍历每个价格点，为每个杠杆分配多空持仓
+        prices.forEach(price => {
+          const priceDiff = price - basePrice;
+          const percentDiff = priceDiff / basePrice;
+
+          leverages.forEach(leverage => {
+            const leveragePoints = liquidationDistribution[leverage][price] || [];
+            const totalLiquidation = leveragePoints.reduce((sum, point) => sum + point[1], 0);
+
+            // 根据价格方向分配到多空持仓
+            // 价格低于当前价格 → 空单持仓（价格下跌时空头盈利，多头爆仓）
+            // 价格高于当前价格 → 多单持仓（价格上涨时多头盈利，空头爆仓）
+            let shortOI = 0;  // 空单持仓
+            let longOI = 0;   // 多单持仓
+
+            if (priceDiff < 0) {
+              // 价格低于当前价格：主要是空单持仓
+              shortOI = totalLiquidation * (1 + Math.abs(percentDiff) * 2);
+            } else {
+              // 价格高于当前价格：主要是多单持仓
+              longOI = totalLiquidation * (1 + Math.abs(percentDiff) * 2);
+            }
+
+            leverageData[leverage].longPositions.push(longOI);
+            leverageData[leverage].shortPositions.push(shortOI);
+          });
+        });
+
+        // 计算每个杠杆的最大OI
+        Object.keys(leverageData).forEach(leverage => {
+          const maxLong = Math.max(...leverageData[leverage].longPositions);
+          const maxShort = Math.max(...leverageData[leverage].shortPositions);
+          leverageData[leverage].maxOI = Math.max(maxLong, maxShort);
+        });
+
+        // 更新全局价格范围
+        priceRange.min = minPrice;
+        priceRange.max = maxPrice;
+        priceRange.current = basePrice;
+
+        console.log(`✅ 清算数据生成完成: ${coin}, 当前价格: $${basePrice.toLocaleString()}`);
+
+        return {
+          prices,
+          leverageData,
+          liquidationDistribution,  // 保存原始清算分布数据
+          marketTrend
+        };
+      } catch (error) {
+        console.error('生成清算数据失败:', error);
+        // 返回默认数据
+        return generateDefaultLiquidationData(coin);
+      }
+    }
+
+    /**
+     * 生成默认清算数据（备用）
+     */
+    function generateDefaultLiquidationData(coin) {
+      const priceMap = {
+        'BTC': 82382,
+        'ETH': 3245.80,
+        'SOL': 218.75,
+        'BNB': 615.20,
+        'XRP': 2.15,
+        'ADA': 0.52,
+        'DOGE': 0.0876,
+        'AVAX': 35.20,
+        'LINK': 14.85,
+        'DOT': 6.95,
+        'MATIC': 0.78
+      };
+
+      const basePrice = priceMap[coin] || 82382;
+      const minPrice = basePrice * 0.95;
+      const maxPrice = basePrice * 1.14;
+      const numPoints = 70;
+
+      const prices = [];
+      for (let i = 0; i < numPoints; i++) {
+        const price = minPrice + (maxPrice - minPrice) * (i / (numPoints - 1));
+        prices.push(price);
+      }
+
+      const leverageData = {};
+      const leverages = ['10x', '25x', '50x', '100x'];
+      leverages.forEach(leverage => {
+        leverageData[leverage] = { longPositions: [], shortPositions: [], maxOI: 0 };
+      });
+
+      prices.forEach(price => {
+        const percentFromCurrent = (price - basePrice) / basePrice;
+        leverages.forEach((leverage, idx) => {
+          const multiplier = 1 + idx * 0.5;
+          leverageData[leverage].longPositions.push(
+            Math.max(0, 50 * multiplier + Math.sin(percentFromCurrent * 5) * 30 * multiplier + Math.random() * 20)
+          );
+          leverageData[leverage].shortPositions.push(
+            Math.max(0, 50 * multiplier - Math.sin(percentFromCurrent * 5) * 30 * multiplier + Math.random() * 20)
+          );
+        });
+      });
+
+      Object.keys(leverageData).forEach(leverage => {
+        const maxLong = Math.max(...leverageData[leverage].longPositions);
+        const maxShort = Math.max(...leverageData[leverage].shortPositions);
+        leverageData[leverage].maxOI = Math.max(maxLong, maxShort);
+      });
+
+      priceRange.min = minPrice;
+      priceRange.max = maxPrice;
+      priceRange.current = basePrice;
+
+      return { prices, leverageData };
+    }
+
+    // 定义杠杆数组
+    const leverages = ['10x', '25x', '50x', '100x'];
+
+    function drawLiquidationChart() {
+      const canvas = document.getElementById('liquidationChart');
+      const ctx = canvas.getContext('2d');
+
+      // 设置canvas尺寸（支持高DPI）
+      const container = canvas.parentElement;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = container.getBoundingClientRect();
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      // 清空画布
+      ctx.clearRect(0, 0, width, height);
+
+      // 配置参数
+      const padding = { top: 20, right: 60, bottom: 40, left: 60 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+
+      // 获取当前杠杆的数据
+      let longPositions, shortPositions, maxOI;
+      
+      if (currentLeverage === 'all') {
+        // 聚合所有杠杆的数据
+        const prices = liquidationData.prices;
+        longPositions = new Array(prices.length).fill(0);
+        shortPositions = new Array(prices.length).fill(0);
+        
+        leverages.forEach(lev => {
+          const levData = liquidationData.leverageData[lev];
+          if (levData) {
+            levData.longPositions.forEach((val, idx) => {
+              longPositions[idx] += val;
+            });
+            levData.shortPositions.forEach((val, idx) => {
+              shortPositions[idx] += val;
+            });
+          }
+        });
+        
+        maxOI = Math.max(
+          Math.max(...longPositions),
+          Math.max(...shortPositions)
+        );
+      } else {
+        // 获取单个杠杆的数据
+        const leverage = liquidationData.leverageData[currentLeverage];
+        if (!leverage) {
+          console.error('杠杆数据不存在:', currentLeverage);
+          return;
+        }
+
+        longPositions = leverage.longPositions;
+        shortPositions = leverage.shortPositions;
+        maxOI = leverage.maxOI;
+      }
+
+      const prices = liquidationData.prices;
+
+      // 计算当前价格在X轴的位置
+      const currentPriceX = padding.left + chartWidth * ((priceRange.current - priceRange.min) / (priceRange.max - priceRange.min));
+
+      // 绘制背景网格
+      ctx.strokeStyle = '#363c45';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= 4; i++) {
+        const y = padding.top + (chartHeight / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(padding.left + chartWidth, y);
+        ctx.stroke();
+      }
+
+      // 绘制当前价格垂直线（虚线）
+      ctx.strokeStyle = '#fcd535';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(currentPriceX, padding.top);
+      ctx.lineTo(currentPriceX, padding.top + chartHeight);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 绘制当前价格标签
+      ctx.fillStyle = '#fcd535';
+      ctx.font = 'bold 11px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(
+        `$${priceRange.current.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+        currentPriceX,
+        padding.top - 5
+      );
+
+      // 计算每个价格点的X坐标
+      const xPositions = prices.map(price =>
+        padding.left + chartWidth * ((price - priceRange.min) / (priceRange.max - priceRange.min))
+      );
+
+      // 绘制空单持仓柱子（左侧，红色）
+      const barWidth = Math.max(1, (chartWidth / prices.length) * 0.8);
+      const colors = leverageColors[currentLeverage].gradient;
+
+      prices.forEach((price, index) => {
+        const x = xPositions[index];
+        const shortOI = shortPositions[index];
+        const longOI = longPositions[index];
+
+        // 如果价格小于当前价格，绘制空单持仓（左侧）
+        if (price <= priceRange.current) {
+          const barHeight = (shortOI / maxOI) * chartHeight * 0.9;
+          const gradient = ctx.createLinearGradient(x, padding.top + chartHeight, x, padding.top + chartHeight - barHeight);
+          gradient.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
+          gradient.addColorStop(1, 'rgba(239, 68, 68, 0.3)');
+
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.roundRect(x - barWidth / 2, padding.top + chartHeight - barHeight, barWidth, barHeight, [2, 2, 0, 0]);
+          ctx.fill();
+        }
+
+        // 如果价格大于当前价格，绘制多单持仓（右侧）
+        if (price >= priceRange.current) {
+          const barHeight = (longOI / maxOI) * chartHeight * 0.9;
+          const gradient = ctx.createLinearGradient(x, padding.top + chartHeight, x, padding.top + chartHeight - barHeight);
+          gradient.addColorStop(0, 'rgba(34, 197, 94, 0.8)');
+          gradient.addColorStop(1, 'rgba(34, 197, 94, 0.3)');
+
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.roundRect(x - barWidth / 2, padding.top + chartHeight - barHeight, barWidth, barHeight, [2, 2, 0, 0]);
+          ctx.fill();
+        }
+      });
+
+      // 绘制X轴刻度和标签
+      ctx.fillStyle = '#848e9c';
+      ctx.font = '10px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      const numTicks = 5;
+      for (let i = 0; i <= numTicks; i++) {
+        const x = padding.left + (chartWidth / numTicks) * i;
+        const price = priceRange.min + (priceRange.max - priceRange.min) * (i / numTicks);
+        const priceLabel = (price >= 1000)
+          ? `${(price / 1000).toFixed(0)}K`
+          : price.toFixed(0);
+
+        ctx.fillText(priceLabel, x, padding.top + chartHeight + 8);
+
+        // 绘制刻度线
+        ctx.strokeStyle = '#474d57';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, padding.top + chartHeight);
+        ctx.lineTo(x, padding.top + chartHeight + 5);
+        ctx.stroke();
+      }
+
+      // 绘制Y轴刻度
+      ctx.fillStyle = '#848e9c';
+      ctx.font = '10px Inter';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+
+      const numYTicks = 5;
+      for (let i = 0; i <= numYTicks; i++) {
+        const y = padding.top + (chartHeight / numYTicks) * i;
+        const oiValue = maxOI * (1 - i / numYTicks);
+        const oiLabel = oiValue >= 1000 ? `${(oiValue / 1000).toFixed(1)}K` : oiValue.toFixed(0);
+
+        ctx.fillText(oiLabel, padding.left - 10, y);
+
+        // 绘制刻度线
+        ctx.strokeStyle = '#474d57';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding.left - 5, y);
+        ctx.lineTo(padding.left, y);
+        ctx.stroke();
+      }
+
+      // 绘制X轴和Y轴标签
+      ctx.fillStyle = '#848e9c';
+      ctx.font = '11px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText('价格', padding.left + chartWidth / 2, height - 8);
+
+      ctx.save();
+      ctx.translate(15, padding.top + chartHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('持仓量 (M)', 0, 0);
+      ctx.restore();
+
+      // 添加鼠标交互
+      canvas.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // 找到对应的价格点
+        let closestIndex = -1;
+        let closestDistance = Infinity;
+
+        xPositions.forEach((x, index) => {
+          const distance = Math.abs(mouseX - x);
+          if (distance < closestDistance && distance < barWidth * 2) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+
+        if (closestIndex >= 0) {
+          const price = prices[closestIndex];
+          const shortOI = shortPositions[closestIndex];
+          const longOI = longPositions[closestIndex];
+          const percent = ((price - priceRange.current) / priceRange.current * 100).toFixed(2);
+          showLiquidationTooltip(e.clientX, e.clientY, { price, shortOI, longOI }, percent);
+        } else {
+          hideLiquidationTooltip();
+        }
+      };
+
+      canvas.onmouseleave = () => {
+        hideLiquidationTooltip();
+      };
+    }
+
+    function showLiquidationTooltip(x, y, data, percent) {
+      const tooltip = document.getElementById('liquidationTooltip');
+      const tooltipPrice = document.getElementById('tooltipPrice');
+      const tooltipPercent = document.getElementById('tooltipPercent');
+      const tooltipLongValue = document.getElementById('tooltipLongValue');
+      const tooltipShortValue = document.getElementById('tooltipShortValue');
+
+      tooltipPrice.textContent = `$${data.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+      tooltipPercent.textContent = `${parseFloat(percent) > 0 ? '+' : ''}${percent}%`;
+      tooltipPercent.className = `text-xs ${parseFloat(percent) > 0 ? 'text-green-400' : 'text-red-400'}`;
+      tooltipLongValue.textContent = `${data.longOI.toFixed(1)}M`;
+      tooltipShortValue.textContent = `${data.shortOI.toFixed(1)}M`;
+
+      // 计算tooltip位置
+      const container = document.getElementById('liquidationChartContainer');
+      const containerRect = container.getBoundingClientRect();
+
+      let tooltipX = x - containerRect.left + 15;
+      let tooltipY = y - containerRect.top - 20;
+
+      // 防止tooltip超出边界
+      if (tooltipX + 180 > containerRect.width) {
+        tooltipX = x - containerRect.left - 200;
+      }
+      if (tooltipY < 10) {
+        tooltipY = 10;
+      }
+      if (tooltipY + 100 > containerRect.height) {
+        tooltipY = containerRect.height - 110;
+      }
+
+      tooltip.style.left = tooltipX + 'px';
+      tooltip.style.top = tooltipY + 'px';
+      tooltip.classList.remove('hidden');
+    }
+
+    function hideLiquidationTooltip() {
+      const tooltip = document.getElementById('liquidationTooltip');
+      tooltip.classList.add('hidden');
+    }
+
+    function updateCurrentPrice() {
+      // 更新当前价格显示
+      const currentPriceEl = document.getElementById('liquidationCurrentPrice');
+      if (currentPriceEl && priceRange.current) {
+        currentPriceEl.textContent = priceRange.current.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      // 更新价格区间显示
+      const rangeLeftPrice = document.getElementById('rangeLeftPrice');
+      const rangeRightPrice = document.getElementById('rangeRightPrice');
+      if (rangeLeftPrice) {
+        rangeLeftPrice.textContent = (priceRange.min / 1000).toFixed(0) + 'K';
+      }
+      if (rangeRightPrice) {
+        rangeRightPrice.textContent = (priceRange.max / 1000).toFixed(0) + 'K';
+      }
+
+      // 更新时间
+      const updateTime = document.getElementById('liquidationUpdateTime');
+      const now = new Date();
+      updateTime.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
     }
 
     function generateMockNews(type, data) {
