@@ -27,6 +27,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 100;
     const type = searchParams.get('type');
+    const apiType = searchParams.get('apiType');
 
     let filteredLogs = logs;
 
@@ -35,13 +36,21 @@ export async function GET(request) {
       filteredLogs = logs.filter(log => log.type === type);
     }
 
+    // 按 API 类型过滤
+    if (apiType && apiType !== 'all') {
+      filteredLogs = filteredLogs.filter(log =>
+        log.metadata && log.metadata.apiType === apiType
+      );
+    }
+
     // 返回最近的日志
     const recentLogs = filteredLogs.slice(0, limit);
 
     return NextResponse.json({
       success: true,
       logs: recentLogs,
-      total: filteredLogs.length
+      total: filteredLogs.length,
+      summary: generateSummary(filteredLogs)
     });
   } catch (error) {
     return NextResponse.json(
@@ -55,7 +64,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { type, message, timestamp } = body;
+    const { type, message, timestamp, metadata } = body;
 
     if (!type || !message) {
       return NextResponse.json(
@@ -69,7 +78,8 @@ export async function POST(request) {
       type,
       message,
       timestamp: timestamp || new Date().toISOString(),
-      source: request.headers.get('user-agent') || 'unknown'
+      source: request.headers.get('user-agent') || 'unknown',
+      metadata: metadata || {}
     };
 
     logs.unshift(log);
@@ -120,4 +130,34 @@ export async function DELETE(request) {
       { status: 500 }
     );
   }
+}
+
+// 生成日志摘要
+function generateSummary(filteredLogs) {
+  const summary = {
+    total: filteredLogs.length,
+    byType: {},
+    byApiType: {},
+    recentErrors: []
+  };
+
+  filteredLogs.forEach(log => {
+    // 按类型统计
+    if (log.metadata && log.metadata.type) {
+      summary.byType[log.metadata.type] = (summary.byType[log.metadata.type] || 0) + 1;
+    } else {
+      summary.byType[log.type] = (summary.byType[log.type] || 0) + 1;
+    }
+
+    // 收集最近的错误
+    if (log.metadata && log.metadata.type === 'error' && summary.recentErrors.length < 5) {
+      summary.recentErrors.push({
+        url: log.metadata.url,
+        error: log.metadata.error,
+        time: log.timestamp
+      });
+    }
+  });
+
+  return summary;
 }

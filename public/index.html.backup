@@ -350,7 +350,6 @@
       padding: 14px;
       transition: all 0.3s ease;
       min-height: 140px;
-    position: relative;
       max-height: 200px;
       overflow-y: auto;
     }
@@ -690,7 +689,6 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <!-- 爆仓监控 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'liquidation')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-red-500"></span>
@@ -702,7 +700,6 @@
         </div>
 
         <!-- 大单异动 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'whale')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-orange-500"></span>
@@ -714,7 +711,6 @@
         </div>
 
         <!-- 资金费率 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'funding')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
@@ -726,7 +722,6 @@
         </div>
 
         <!-- 未平仓合约 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'oi')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -738,7 +733,6 @@
         </div>
 
         <!-- 订单簿深度 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'orderbook')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
@@ -750,7 +744,6 @@
         </div>
 
         <!-- 价格波动率 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'volatility')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-orange-500"></span>
@@ -762,7 +755,6 @@
         </div>
 
         <!-- 24h高低点 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'highlow')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-green-500"></span>
@@ -774,7 +766,6 @@
         </div>
 
         <!-- 成交量分析 -->
-        <div class="anomaly-card anomaly-card-clickable" onclick="showModal(this, 'volume')">
         <div class="anomaly-card">
           <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-pink-500"></span>
@@ -791,31 +782,6 @@
     <footer class="text-center py-4 text-slate-500 text-sm">
       <p>HelloYan - 智能加密货币策略分析系统 | 数据仅供参考，不构成投资建议</p>
     </footer>
-
-    <!-- 弹窗模态框 -->
-    <div id="modal" class="fixed inset-0 z-50 hidden">
-      <div id="modalOverlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal()"></div>
-      <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div class="glass-card w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
-          <div class="flex items-center justify-between p-6 border-b border-slate-700/50">
-            <h2 id="modalTitle" class="text-xl font-bold text-white">详情</h2>
-            <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors p-2">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          <div id="modalContent" class="flex-1 overflow-y-auto p-6"></div>
-          <div class="p-4 border-t border-slate-700/50 flex justify-end gap-3">
-            <button onclick="closeModal()" class="btn-secondary">关闭</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <script src="/modal.js"></script>
 
     <!-- 弹窗模态框 -->
     <div id="modal" class="fixed inset-0 z-50 hidden">
@@ -911,20 +877,14 @@
     }
 
     // ==================== 通用 API 调用（带降级策略）====================
-    async function fetchWithFallback(url, fallbackUrl, timeout = 15000) {
-      const startTime = Date.now();
-      let dataSource = 'primary';
-      let status = 'success';
-      let errorMessage = '';
-
+    async function fetchWithFallback(url, fallbackUrl, timeout = 10000) {
       try {
         // 尝试主 API
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
         const response = await fetch(url, {
-          signal: controller.signal,
-          cache: 'no-cache' // 禁用缓存，确保获取最新数据
+          signal: controller.signal
         });
         clearTimeout(timeoutId);
 
@@ -932,73 +892,28 @@
           const data = await response.json();
           // 检查数据是否有效（不是空数组）
           if (Array.isArray(data) && data.length > 0) {
-            console.log(`✅ API 成功: ${url}`);
-
-            // 记录成功日志
-            await logApiCall('success', url, dataSource, Date.now() - startTime);
-
             return data;
           }
-          console.log(`⚠️ API 返回空数据: ${url}`);
-          errorMessage = 'API 返回空数据';
         }
 
         throw new Error('主 API 返回无效数据');
       } catch (error) {
-        console.log(`❌ 主 API 失败 (${url})，尝试备用 API:`, error.message);
-        dataSource = 'fallback';
-        errorMessage = error.message;
+        console.log(`主 API 失败 (${url})，尝试备用 API:`, error.message);
 
         try {
           // 尝试备用 API
-          const response = await fetch(fallbackUrl, {
-            cache: 'no-cache'
-          });
+          const response = await fetch(fallbackUrl);
           if (response.ok) {
             const data = await response.json();
-            console.log('✅ 使用备用数据');
-
-            // 记录备用数据日志
-            await logApiCall('fallback', fallbackUrl, dataSource, Date.now() - startTime, errorMessage);
-
+            console.log('使用备用数据');
             return data;
           }
         } catch (fallbackError) {
-          console.error('❌ 备用 API 也失败:', fallbackError.message);
-          errorMessage = `${error.message} | ${fallbackError.message}`;
+          console.error('备用 API 也失败:', fallbackError.message);
         }
-
-        // 记录失败日志
-        await logApiCall('error', url, dataSource, Date.now() - startTime, errorMessage);
 
         // 返回空数组
         return [];
-      }
-    }
-
-    // ==================== API 日志记录 ====================
-    async function logApiCall(type, url, source, duration, error = '') {
-      try {
-        await fetch('/api/logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            type: 'api_call',
-            message: `${type.toUpperCase()}: ${url}`,
-            metadata: {
-              url,
-              source,
-              duration,
-              error,
-              type
-            }
-          })
-        });
-      } catch (logError) {
-        // 日志记录失败不影响主流程
-        console.error('Failed to log API call:', logError);
       }
     }
 
@@ -1014,9 +929,9 @@
 
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
 
         const newsData = generateMockNews(type, data);
@@ -1126,11 +1041,11 @@
 
         let sortedCoins = [...coins];
         if (currentRankingType === 'volume') {
-          sortedCoins.sort((a, b) => (b.total_volume || 0) - (a.total_volume || 0));
+          sortedCoins.sort((a, b) => (b.quoteVolume || 0) - (a.quoteVolume || 0));
         } else if (currentRankingType === 'change') {
-          sortedCoins.sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
+          sortedCoins.sort((a, b) => (b.changePercent || 0) - (a.changePercent || 0));
         } else if (currentRankingType === 'activity') {
-          sortedCoins.sort((a, b) => (b.market_cap || 0) - (a.market_cap || 0));
+          sortedCoins.sort((a, b) => (b.count || 0) - (a.count || 0));
         }
 
         const tbody = document.getElementById('rankingTable');
@@ -1139,20 +1054,20 @@
             <td class="py-3 font-medium text-slate-400">${index + 1}</td>
             <td class="py-3">
               <div class="flex items-center gap-2">
-                <img src="${coin.image || ''}" alt="${coin.symbol || ''}" class="w-6 h-6 rounded-full" onerror="this.style.display='none';this.nextElementSibling?.style?.display='flex'">
+                <img src="${coin.icon}" alt="${coin.symbol}" class="w-6 h-6 rounded-full" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${coin.symbol?.[0]}</text></svg>'">
                 <div>
-                  <p class="font-medium text-white">${coin.symbol?.toUpperCase() || '-'}</p>
+                  <p class="font-medium text-white">${coin.symbol || '-'}</p>
                   <p class="text-xs text-slate-400">${coin.name || '-'}</p>
                 </div>
               </div>
             </td>
-            <td class="py-3 font-medium">$${(coin.current_price || 0).toLocaleString()}</td>
+            <td class="py-3 font-medium">$${(coin.last || 0).toLocaleString()}</td>
             <td class="py-3">
-              <span class="${coin.price_change_percentage_24h >= 0 ? 'text-green-500' : 'text-red-500'} font-medium">
-                ${coin.price_change_percentage_24h >= 0 ? '+' : ''}${(coin.price_change_percentage_24h || 0).toFixed(2)}%
+              <span class="${coin.changePercent >= 0 ? 'text-green-500' : 'text-red-500'} font-medium">
+                ${coin.changePercent >= 0 ? '+' : ''}${(coin.changePercent || 0).toFixed(2)}%
               </span>
             </td>
-            <td class="py-3 text-slate-300">$${formatNumber(coin.total_volume || 0)}</td>
+            <td class="py-3 text-slate-300">$${formatNumber(coin.quoteVolume || 0)}</td>
           </tr>
         `).join('');
 
@@ -1205,18 +1120,15 @@
 
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
 
-        // CoinGecko API 返回的是直接数组，不是 {tickers: [...]}
-        const coins = Array.isArray(data) ? data : [];
-
         // 1小时涨幅榜
-        const topGainers = coins.slice(0, 5) || [];
+        const topGainers = data?.tickers?.slice(0, 5) || [];
         document.getElementById('topGainers1h').innerHTML = topGainers.map(coin =>
-          `<span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">${coin.symbol?.toUpperCase() || 'N/A'}: +${(coin.price_change_percentage_24h || 0).toFixed(2)}%</span>`
+          `<span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">${coin.symbol}: +${(coin.changePercent || 0).toFixed(2)}%</span>`
         ).join('') || '<span class="text-sm text-slate-400">暂无数据</span>';
 
         // 异动警报
@@ -1242,9 +1154,9 @@
 
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
 
         // BTC大额转账
@@ -1288,9 +1200,9 @@
 
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
         const signals = generateMockSignals(data);
 
@@ -1320,15 +1232,14 @@
     }
 
     function generateMockSignals(data) {
-      // CoinGecko API 返回的是直接数组，不是 {tickers: [...]}
-      const coins = Array.isArray(data) ? data.slice(0, 5) : [];
+      const coins = data?.tickers?.slice(0, 5) || [];
       return coins.map(coin => ({
-        coin: coin.symbol?.toUpperCase() || 'BTC',
+        coin: coin.symbol || 'BTC',
         icon: '🚀',
-        type: (coin.price_change_percentage_24h || 0) > 0 ? 'buy' : 'sell',
-        action: (coin.price_change_percentage_24h || 0) > 0 ? '买入信号' : '卖出信号',
-        reason: (coin.price_change_percentage_24h || 0) > 0 ? '突破关键阻力位' : '跌破支撑位',
-        price: (coin.current_price || 0).toFixed(2)
+        type: (coin.changePercent || 0) > 0 ? 'buy' : 'sell',
+        action: (coin.changePercent || 0) > 0 ? '买入信号' : '卖出信号',
+        reason: (coin.changePercent || 0) > 0 ? '突破关键阻力位' : '跌破支撑位',
+        price: (coin.last || 0).toFixed(2)
       }));
     }
 
@@ -1342,9 +1253,9 @@
 
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
         const strategies = generateMockStrategies(data);
 
@@ -1405,9 +1316,9 @@
 
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
         const bollingerData = generateMockBollinger(data);
 
@@ -1437,17 +1348,16 @@
     }
 
     function generateMockBollinger(data) {
-      // CoinGecko API 返回的是直接数组，不是 {tickers: [...]}
-      const coins = Array.isArray(data) ? data.slice(0, 4) : [];
+      const coins = data?.tickers?.slice(0, 4) || [];
       return coins.map(coin => {
-        const price = coin.current_price || 0;
+        const price = coin.last || 0;
         const upper = price * 1.05;
         const lower = price * 0.95;
-        const position = price > 0 ? ((price - lower) / (upper - lower) * 100).toFixed(0) : '50';
+        const position = ((price - lower) / (upper - lower) * 100).toFixed(0);
         const strength = position > 80 ? 'strong-sell' : position < 20 ? 'strong-buy' : '';
 
         return {
-          coin: coin.symbol?.toUpperCase() || 'BTC',
+          coin: coin.symbol || 'BTC',
           upper: upper.toFixed(2),
           lower: lower.toFixed(2),
           current: price.toFixed(2),
@@ -1462,9 +1372,9 @@
     async function loadMarketAnomalyData() {
       try {
         const data = await fetchWithFallback(
-          '/api/proxy/aggregated?endpoint=coins/markets&vs_currency=usd&per_page=10',
+          '/api/proxy/coingecko-edge?endpoint=coins/markets&vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false',
           '/api/proxy/backup-data?type=market',
-          15000
+          8000
         );
 
         // 爆仓监控
@@ -1675,28 +1585,5 @@
       }
     });
   </script>
-
-  <!-- 弹窗模态框 -->
-  <div id="modal" class="fixed inset-0 z-50 hidden">
-    <div id="modalOverlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal()"></div>
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-      <div class="glass-card w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative">
-        <div class="flex items-center justify-between p-6 border-b border-slate-700/50">
-          <h2 id="modalTitle" class="text-xl font-bold text-white">详情</h2>
-          <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors p-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-        <div id="modalContent" class="flex-1 overflow-y-auto p-6"></div>
-        <div class="p-4 border-t border-slate-700/50 flex justify-end gap-3">
-          <button onclick="closeModal()" class="btn-secondary">关闭</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="/modal.js"></script>
 </body>
 </html>

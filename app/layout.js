@@ -1,5 +1,3 @@
-import './globals.css'
-
 export const metadata = {
   title: 'HelloYan - 智能加密货币策略分析',
   description: '智能加密货币策略分析系统',
