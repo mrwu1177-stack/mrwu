@@ -181,7 +181,34 @@ function generateModalContent(type, data) {
 
 // 爆仓监控内容
 function generateLiquidationContent(data) {
+  const totalAmount = data.reduce((sum, item) => {
+    const value = parseFloat(item.amount.replace(/[$,MKB]/g, ''));
+    if (item.amount.includes('B')) return sum + value * 1000;
+    if (item.amount.includes('M')) return sum + value;
+    if (item.amount.includes('K')) return sum + value / 1000;
+    return sum + value;
+  }, 0);
+
+  const longCount = data.filter(item => item.type === 'long').length;
+  const shortCount = data.filter(item => item.type === 'short').length;
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">总爆仓金额</p>
+          <p class="text-xl font-bold text-red-400">$${totalAmount.toFixed(2)}M</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">多头爆仓</p>
+          <p class="text-xl font-bold text-red-400">${longCount} 笔</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">空头爆仓</p>
+          <p class="text-xl font-bold text-green-400">${shortCount} 笔</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -213,7 +240,34 @@ function generateLiquidationContent(data) {
 
 // 大单异动内容
 function generateWhaleContent(data) {
+  const totalValue = data.reduce((sum, item) => {
+    const value = parseFloat(item.value.replace(/[$,MKB]/g, ''));
+    if (item.value.includes('B')) return sum + value * 1000;
+    if (item.value.includes('M')) return sum + value;
+    if (item.value.includes('K')) return sum + value / 1000;
+    return sum + value;
+  }, 0);
+
+  const inflowCount = data.filter(item => item.type === 'inflow').length;
+  const outflowCount = data.filter(item => item.type === 'outflow').length;
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">总价值</p>
+          <p class="text-xl font-bold text-amber-400">$${totalValue.toFixed(2)}M</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">流入</p>
+          <p class="text-xl font-bold text-green-400">${inflowCount} 笔</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">流出</p>
+          <p class="text-xl font-bold text-red-400">${outflowCount} 笔</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -233,8 +287,8 @@ function generateWhaleContent(data) {
             <td class="text-amber-400 font-medium">${item.value}</td>
             <td>
               <span class="px-2 py-1 rounded text-xs font-medium ${
-                item.type === 'inflow' ? 'bg-green-500/20 text-green-400' : 
-                item.type === 'outflow' ? 'bg-red-500/20 text-red-400' : 
+                item.type === 'inflow' ? 'bg-green-500/20 text-green-400' :
+                item.type === 'outflow' ? 'bg-red-500/20 text-red-400' :
                 'bg-yellow-500/20 text-yellow-400'
               }">
                 ${item.type === 'inflow' ? '流入' : item.type === 'outflow' ? '流出' : '铸造'}
@@ -251,7 +305,26 @@ function generateWhaleContent(data) {
 
 // 资金费率内容
 function generateFundingContent(data) {
+  const positiveCount = data.filter(item => item.status === 'positive').length;
+  const negativeCount = data.filter(item => item.status === 'negative').length;
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">多头支付</p>
+          <p class="text-xl font-bold text-green-400">${positiveCount} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">空头支付</p>
+          <p class="text-xl font-bold text-red-400">${negativeCount} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">更新周期</p>
+          <p class="text-xl font-bold text-slate-300">8 小时</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -283,7 +356,31 @@ function generateFundingContent(data) {
 
 // 未平仓合约内容
 function generateOIContent(data) {
+  const totalOI = data.reduce((sum, item) => {
+    const value = parseFloat(item.value.replace(/[$,B]/g, ''));
+    return sum + value;
+  }, 0);
+
+  const upTrendCount = data.filter(item => item.trend === 'up').length;
+  const downTrendCount = data.filter(item => item.trend === 'down').length;
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">总OI</p>
+          <p class="text-xl font-bold text-amber-400">$${totalOI.toFixed(1)}B</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">上升趋势</p>
+          <p class="text-xl font-bold text-green-400">${upTrendCount} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">下降趋势</p>
+          <p class="text-xl font-bold text-red-400">${downTrendCount} 个</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -315,7 +412,26 @@ function generateOIContent(data) {
 
 // 订单簿深度内容
 function generateOrderbookContent(data) {
+  const bullishCount = data.filter(item => item.status === 'bullish').length;
+  const bearishCount = data.filter(item => item.status === 'bearish').length;
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">买盘占优</p>
+          <p class="text-xl font-bold text-green-400">${bullishCount} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">卖盘占优</p>
+          <p class="text-xl font-bold text-red-400">${bearishCount} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">买卖比均值</p>
+          <p class="text-xl font-bold text-amber-400">${(data.reduce((sum, item) => sum + parseFloat(item.ratio), 0) / data.length).toFixed(2)}</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -347,7 +463,26 @@ function generateOrderbookContent(data) {
 
 // 价格波动率内容
 function generateVolatilityContent(data) {
+  const avgVolatility = (data.reduce((sum, item) => sum + parseFloat(item.volatility), 0) / data.length).toFixed(2);
+  const maxVolatility = Math.max(...data.map(item => parseFloat(item.volatility))).toFixed(2);
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">平均波动率</p>
+          <p class="text-xl font-bold text-orange-400">${avgVolatility}%</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">最高波动率</p>
+          <p class="text-xl font-bold text-red-400">${maxVolatility}%</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">统计周期</p>
+          <p class="text-xl font-bold text-slate-300">24 小时</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -377,7 +512,25 @@ function generateVolatilityContent(data) {
 
 // 24h高低点内容
 function generateHighLowContent(data) {
+  const avgPosition = (data.reduce((sum, item) => sum + parseFloat(item.position), 0) / data.length).toFixed(1);
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">平均位置</p>
+          <p class="text-xl font-bold text-amber-400">${avgPosition}%</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">高位币种</p>
+          <p class="text-xl font-bold text-green-400">${data.filter(item => parseFloat(item.position) > 70).length} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">低位币种</p>
+          <p class="text-xl font-bold text-red-400">${data.filter(item => parseFloat(item.position) < 30).length} 个</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
@@ -411,7 +564,31 @@ function generateHighLowContent(data) {
 
 // 成交量分析内容
 function generateVolumeContent(data) {
+  const totalVolume = data.reduce((sum, item) => {
+    const value = parseFloat(item.volume24h.replace(/[$,B]/g, ''));
+    return sum + value;
+  }, 0);
+
+  const increaseCount = data.filter(item => item.change24h.startsWith('+')).length;
+  const decreaseCount = data.filter(item => item.change24h.startsWith('-')).length;
+
   return `
+    <div class="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xs text-slate-400 mb-1">总成交量</p>
+          <p class="text-xl font-bold text-pink-400">$${totalVolume.toFixed(2)}B</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">成交量增长</p>
+          <p class="text-xl font-bold text-green-400">${increaseCount} 个</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1">成交量下降</p>
+          <p class="text-xl font-bold text-red-400">${decreaseCount} 个</p>
+        </div>
+      </div>
+    </div>
     <table class="modal-data-table">
       <thead>
         <tr>
