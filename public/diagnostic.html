@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HelloYan - 网络诊断</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #0b0e11;
+      color: #eaecef;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-yellow-400 mb-8">🔍 HelloYan 网络诊断</h1>
+    
+    <div class="bg-card p-6 rounded-lg mb-6 border border-yellow-500/20">
+      <h2 class="text-xl font-bold mb-4">诊断说明</h2>
+      <p class="text-slate-400 mb-2">如果本地环境无法访问外部 API，这是正常情况。</p>
+      <p class="text-slate-400 mb-2">部署到 Railway 后，网络问题通常会自动解决。</p>
+      <div class="mt-4 p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+        <p class="text-yellow-400 font-bold">✅ 建议</p>
+        <ul class="text-slate-300 mt-2 space-y-1">
+          <li>• 直接部署到 Railway，测试线上环境</li>
+          <li>• Railway 有更好的网络环境，可以访问外部 API</li>
+          <li>• 如果 Railway 也有问题，可能需要配置代理或 VPN</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="results" class="space-y-4">
+      <h2 class="text-xl font-bold mb-4">API 连接测试结果</h2>
+      <p class="text-slate-400">点击按钮开始测试...</p>
+      <button onclick="runTests()" class="btn-primary px-6 py-3 rounded-lg font-bold">
+        开始测试
+      </button>
+    </div>
+
+    <div id="detailedResults" class="mt-8 space-y-4 hidden">
+      <h2 class="text-xl font-bold mb-4">详细结果</h2>
+      <pre id="jsonOutput" class="bg-card p-4 rounded-lg text-xs overflow-x-auto border border-slate-700"></pre>
+    </div>
+  </div>
+
+  <script>
+    async function runTests() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p class="text-yellow-400">正在测试，请稍候...</p>';
+
+      const tests = [
+        { name: 'Binance API', url: 'https://api.binance.com/api/v3/ping' },
+        { name: 'CoinGecko API', url: 'https://api.coingecko.com/api/v3/ping' },
+        { name: '本机 Next.js API', url: '/api/test-connection' },
+        { name: '外部 API 诊断', url: '/api/test-external-apis' }
+      ];
+
+      const results = [];
+
+      for (const test of tests) {
+        try {
+          const start = Date.now();
+          const response = await fetch(test.url, { 
+            signal: AbortSignal.timeout(5000) 
+          });
+          const duration = Date.now() - start;
+          
+          results.push({
+            name: test.name,
+            url: test.url,
+            status: response.status,
+            success: response.ok,
+            duration: duration + 'ms',
+            message: response.ok ? '✅ 连接成功' : `❌ 错误: ${response.status}`
+          });
+        } catch (error) {
+          results.push({
+            name: test.name,
+            url: test.url,
+            status: 'ERROR',
+            success: false,
+            duration: '超时',
+            message: `❌ ${error.message}`
+          });
+        }
+      }
+
+      // 显示结果
+      resultsDiv.innerHTML = results.map(r => `
+        <div class="bg-card p-4 rounded-lg border ${r.success ? 'border-green-500/30' : 'border-red-500/30'}">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-bold ${r.success ? 'text-green-400' : 'text-red-400'}">${r.name}</p>
+              <p class="text-xs text-slate-500 mt-1">${r.url}</p>
+            </div>
+            <div class="text-right">
+              <p class="${r.success ? 'text-green-400' : 'text-red-400'}">${r.message}</p>
+              <p class="text-xs text-slate-500">${r.duration}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // 显示详细 JSON
+      const detailedResultsDiv = document.getElementById('detailedResults');
+      detailedResultsDiv.classList.remove('hidden');
+      document.getElementById('jsonOutput').textContent = JSON.stringify(results, null, 2);
+    }
+
+    // Tailwind 配置
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'card': '#1e2329',
+            'btn-primary': 'linear-gradient(135deg, #fcd535, #f0b90b)',
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
