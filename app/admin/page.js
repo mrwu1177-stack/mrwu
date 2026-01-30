@@ -24,12 +24,20 @@ export default function AdminPage() {
   const [userForm, setUserForm] = useState({ username: '', password: '', role: 'user' });
   const [editingUserId, setEditingUserId] = useState(null);
 
+  // 监控相关状态
+  const [strategyData, setStrategyData] = useState(null);
+  const [apiStatusData, setApiStatusData] = useState(null);
+  const [dataStatusData, setDataStatusData] = useState(null);
+  const [monitoringLoading, setMonitoringLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('logs');
+
   // 初始化
   useEffect(() => {
     const auth = localStorage.getItem('admin_authenticated');
     if (auth === 'true') {
       setIsAuthenticated(true);
       fetchConfig();
+      fetchUsers();
     }
   }, []);
 
@@ -41,6 +49,15 @@ export default function AdminPage() {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, logFilter]);
+
+  // 自动刷新监控数据
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchMonitoringData();
+      const interval = setInterval(fetchMonitoringData, 30000); // 每30秒刷新
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
 
   const fetchConfig = async () => {
     try {
@@ -102,6 +119,45 @@ export default function AdminPage() {
     }
   };
 
+  const fetchMonitoringData = async () => {
+    setMonitoringLoading(true);
+    try {
+      const auth = localStorage.getItem('admin_password');
+
+      // 并行获取所有监控数据
+      const [strategyRes, apiStatusRes, dataStatusRes] = await Promise.all([
+        fetch('/api/monitoring/strategy', {
+          headers: { 'Authorization': `Bearer ${auth}` }
+        }),
+        fetch('/api/monitoring/api-status', {
+          headers: { 'Authorization': `Bearer ${auth}` }
+        }),
+        fetch('/api/monitoring/data-status', {
+          headers: { 'Authorization': `Bearer ${auth}` }
+        })
+      ]);
+
+      if (strategyRes.ok) {
+        const data = await strategyRes.json();
+        setStrategyData(data.data);
+      }
+
+      if (apiStatusRes.ok) {
+        const data = await apiStatusRes.json();
+        setApiStatusData(data.data);
+      }
+
+      if (dataStatusRes.ok) {
+        const data = await dataStatusRes.json();
+        setDataStatusData(data.data);
+      }
+    } catch (error) {
+      console.error('获取监控数据失败:', error);
+    } finally {
+      setMonitoringLoading(false);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -120,6 +176,7 @@ export default function AdminPage() {
         localStorage.setItem('admin_password', password);
         await fetchConfig();
         await fetchUsers();
+        await fetchMonitoringData();
       } else if (response.status === 401) {
         setError('请输入密码');
       } else if (response.status === 403) {
@@ -196,91 +253,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleAddUser = () => {
-    setUserForm({ username: '', password: '', role: 'user' });
-    setEditingUserId(null);
-    setShowUserModal(true);
-  };
-
-  const handleEditUser = (user) => {
-    setUserForm({
-      username: user.username,
-      password: '',
-      role: user.role
-    });
-    setEditingUserId(user.id);
-    setShowUserModal(true);
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (!confirm('确定要删除该用户吗？')) {
-      return;
-    }
-
-    try {
-      const auth = localStorage.getItem('admin_password');
-      const response = await fetch(`/api/users?id=${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${auth}`
-        }
-      });
-
-      if (response.ok) {
-        await fetchUsers();
-        alert('用户已删除');
-      }
-    } catch (error) {
-      console.error('删除用户失败:', error);
-      alert('删除用户失败');
-    }
-  };
-
-  const handleSaveUser = async (e) => {
-    e.preventDefault();
-
-    if (!userForm.username || !userForm.password) {
-      alert('请填写用户名和密码');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const auth = localStorage.getItem('admin_password');
-      const url = editingUserId
-        ? '/api/users'
-        : '/api/users';
-
-      const response = await fetch(url, {
-        method: editingUserId ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth}`
-        },
-        body: JSON.stringify({
-          ...(editingUserId && { id: editingUserId }),
-          ...userForm
-        })
-      });
-
-      if (response.ok) {
-        await fetchUsers();
-        setShowUserModal(false);
-        setUserForm({ username: '', password: '', role: 'user' });
-        setEditingUserId(null);
-        alert('用户已保存');
-      } else {
-        const data = await response.json();
-        alert(data.error || '操作失败');
-      }
-    } catch (error) {
-      console.error('保存用户失败:', error);
-      alert('保存用户失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('admin_authenticated');
@@ -291,6 +263,9 @@ export default function AdminPage() {
     setMessage('');
     setLogs([]);
     setUsers([]);
+    setStrategyData(null);
+    setApiStatusData(null);
+    setDataStatusData(null);
   };
 
   const formatTime = (isoString) => {
@@ -322,14 +297,6 @@ export default function AdminPage() {
       error: 'text-red-400'
     };
     return colors[type] || 'text-slate-400';
-  };
-
-  const getUserRoleBadge = (role) => {
-    const badges = {
-      admin: { color: 'bg-purple-500/20 text-purple-400', label: '管理员' },
-      user: { color: 'bg-blue-500/20 text-blue-400', label: '用户' }
-    };
-    return badges[role] || badges.user;
   };
 
   // 登录页面
@@ -394,7 +361,7 @@ export default function AdminPage() {
   // 配置页面
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -411,6 +378,29 @@ export default function AdminPage() {
           >
             退出登录
           </button>
+        </div>
+
+        {/* 标签导航 */}
+        <div className="mb-6 bg-slate-900 rounded-2xl p-2 border border-slate-800 inline-flex">
+          {[
+            { id: 'logs', label: '监控日志', icon: '📊' },
+            { id: 'strategy', label: '策略分析', icon: '🎯' },
+            { id: 'api', label: 'API状态', icon: '🔗' },
+            { id: 'data', label: '数据监控', icon: '💾' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-6 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -506,150 +496,390 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* 中间：日志监控 */}
+          {/* 右侧：主要监控区域 */}
           <div className="lg:col-span-2 space-y-6">
-            {/* 用户管理 */}
-            <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">用户管理</h2>
-                <button
-                  onClick={handleAddUser}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-medium rounded-lg transition-all text-sm"
-                >
-                  添加用户
-                </button>
-              </div>
+            {activeTab === 'logs' && (
+              /* 日志监控 */
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-white">监控日志</h2>
 
-              <div className="bg-slate-800/50 rounded-xl p-4 h-64 overflow-y-auto">
-                {usersLoading && users.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                    加载中...
-                  </div>
-                ) : users.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                    暂无用户
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {users.map((user) => {
-                      const badge = getUserRoleBadge(user.role);
-                      return (
-                        <div
-                          key={user.id}
-                          className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
+                  <div className="flex items-center gap-3">
+                    {/* 过滤器 */}
+                    <div className="flex gap-2">
+                      {['all', 'info', 'success', 'warning', 'error'].map(type => (
+                        <button
+                          key={type}
+                          onClick={() => setLogFilter(type)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            logFilter === type
+                              ? 'bg-cyan-500/20 text-cyan-400'
+                              : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                          }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold">
-                              {user.username.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="text-white font-medium">{user.username}</p>
-                              <p className="text-xs text-slate-400">
-                                创建于 {formatTime(user.createdAt)}
-                              </p>
-                            </div>
-                          </div>
+                          {type === 'all' ? '全部' : type}
+                        </button>
+                      ))}
+                    </div>
 
-                          <div className="flex items-center gap-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.color}`}>
-                              {badge.label}
-                            </span>
-                            {user.id !== 'admin' && (
-                              <button
-                                onClick={() => handleEditUser(user)}
-                                className="p-2 text-slate-400 hover:text-cyan-400 transition-colors"
-                              >
-                                编辑
-                              </button>
-                            )}
-                            {user.id !== 'admin' && (
-                              <button
-                                onClick={() => handleDeleteUser(user.id)}
-                                className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-                              >
-                                删除
-                              </button>
-                            )}
+                    {/* 清空按钮 */}
+                    <button
+                      onClick={handleClearLogs}
+                      disabled={logsLoading}
+                      className="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
+                    >
+                      清空
+                    </button>
+                  </div>
+                </div>
+
+                {/* 日志列表 */}
+                <div className="bg-slate-800/50 rounded-xl p-4 h-96 overflow-y-auto">
+                  {logsLoading && logs.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-slate-500">
+                      加载中...
+                    </div>
+                  ) : logs.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-slate-500">
+                      暂无日志
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {logs.map((log) => (
+                        <div
+                          key={log.id}
+                          className="flex items-start gap-3 p-3 bg-slate-800 rounded-lg text-sm"
+                        >
+                          <span className="text-lg">{getLogIcon(log.type)}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-medium ${getLogColor(log.type)}`}>
+                              {log.message}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {formatTime(log.timestamp)}
+                            </p>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-            {/* 日志监控 */}
-            <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">监控日志</h2>
-
-                <div className="flex items-center gap-3">
-                  {/* 过滤器 */}
-                  <div className="flex gap-2">
-                    {['all', 'info', 'success', 'warning', 'error'].map(type => (
-                      <button
-                        key={type}
-                        onClick={() => setLogFilter(type)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          logFilter === type
-                            ? 'bg-cyan-500/20 text-cyan-400'
-                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                        }`}
-                      >
-                        {type === 'all' ? '全部' : type}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* 清空按钮 */}
-                  <button
-                    onClick={handleClearLogs}
-                    disabled={logsLoading}
-                    className="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
-                  >
-                    清空
-                  </button>
+                <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+                  <span>显示最近 {logs.length} 条日志</span>
+                  <span>自动刷新: 每 5 秒</span>
                 </div>
               </div>
+            )}
 
-              {/* 日志列表 */}
-              <div className="bg-slate-800/50 rounded-xl p-4 h-96 overflow-y-auto">
-                {logsLoading && logs.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                    加载中...
-                  </div>
-                ) : logs.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                    暂无日志
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {logs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="flex items-start gap-3 p-3 bg-slate-800 rounded-lg text-sm"
-                      >
-                        <span className="text-lg">{getLogIcon(log.type)}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-medium ${getLogColor(log.type)}`}>
-                            {log.message}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {formatTime(log.timestamp)}
-                          </p>
+            {activeTab === 'strategy' && (
+              /* 策略分析监控 */
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-white">策略分析监控</h2>
+                  {monitoringLoading && (
+                    <span className="text-xs text-slate-500">刷新中...</span>
+                  )}
+                </div>
+
+                <div className="space-y-6">
+                  {/* 异动信号 */}
+                  {strategyData?.signal && (
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-white">异动信号</h3>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          strategyData.signal.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {strategyData.signal.status === 'active' ? '运行中' : '错误'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-slate-400">数据点：</span>
+                          <span className="text-white ml-2">{strategyData.signal.dataPoints}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">API延迟：</span>
+                          <span className="text-white ml-2">{strategyData.signal.apiLatency}ms</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">数据源：</span>
+                          <span className="text-white ml-2">{strategyData.signal.apiSource}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">更新时间：</span>
+                          <span className="text-white ml-2">{formatTime(strategyData.signal.lastUpdate)}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      {strategyData.signal.error && (
+                        <div className="mt-3 p-2 bg-red-500/10 rounded-lg text-xs text-red-400">
+                          {strategyData.signal.error}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-              <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                <span>显示最近 {logs.length} 条日志</span>
-                <span>自动刷新: 每 5 秒</span>
+                  {/* 多币种策略 */}
+                  {strategyData?.multicoin && (
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-white">多币种策略</h3>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          strategyData.multicoin.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {strategyData.multicoin.status === 'active' ? '运行中' : '错误'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-slate-400">策略数量：</span>
+                          <span className="text-white ml-2">{strategyData.multicoin.dataPoints}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">API延迟：</span>
+                          <span className="text-white ml-2">{strategyData.multicoin.apiLatency}ms</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">数据源：</span>
+                          <span className="text-white ml-2">{strategyData.multicoin.apiSource}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">更新时间：</span>
+                          <span className="text-white ml-2">{formatTime(strategyData.multicoin.lastUpdate)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 布林带分析 */}
+                  {strategyData?.bollinger && (
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-white">布林带分析</h3>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          strategyData.bollinger.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {strategyData.bollinger.status === 'active' ? '运行中' : '错误'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-slate-400">分析币种：</span>
+                          <span className="text-white ml-2">{strategyData.bollinger.dataPoints}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">API延迟：</span>
+                          <span className="text-white ml-2">{strategyData.bollinger.apiLatency}ms</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">数据源：</span>
+                          <span className="text-white ml-2">{strategyData.bollinger.apiSource}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">更新时间：</span>
+                          <span className="text-white ml-2">{formatTime(strategyData.bollinger.lastUpdate)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {activeTab === 'api' && (
+              /* API状态监控 */
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-white">API运行状态</h2>
+                  {monitoringLoading && (
+                    <span className="text-xs text-slate-500">刷新中...</span>
+                  )}
+                </div>
+
+                {apiStatusData?.summary && (
+                  <>
+                    {/* 总体统计 */}
+                    <div className="grid grid-cols-4 gap-4 mb-6">
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-white">{apiStatusData.summary.total}</p>
+                        <p className="text-xs text-slate-400 mt-1">总数</p>
+                      </div>
+                      <div className="bg-green-500/10 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-green-400">{apiStatusData.summary.healthy}</p>
+                        <p className="text-xs text-slate-400 mt-1">正常</p>
+                      </div>
+                      <div className="bg-yellow-500/10 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-yellow-400">{apiStatusData.summary.degraded}</p>
+                        <p className="text-xs text-slate-400 mt-1">降级</p>
+                      </div>
+                      <div className="bg-red-500/10 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-red-400">{apiStatusData.summary.down}</p>
+                        <p className="text-xs text-slate-400 mt-1">故障</p>
+                      </div>
+                    </div>
+
+                    {/* 健康度 */}
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-slate-400">系统健康度</span>
+                        <span className="text-lg font-bold text-white">{apiStatusData.summary.healthPercentage}%</span>
+                      </div>
+                      <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            parseFloat(apiStatusData.summary.healthPercentage) >= 80 ? 'bg-green-500' :
+                            parseFloat(apiStatusData.summary.healthPercentage) >= 50 ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`}
+                          style={{ width: apiStatusData.summary.healthPercentage + '%' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* API列表 */}
+                    <div className="space-y-4">
+                      {Object.entries(apiStatusData.apis).map(([category, apis]) => (
+                        <div key={category}>
+                          <h4 className="text-sm font-semibold text-slate-300 mb-2">{category}</h4>
+                          <div className="space-y-2">
+                            {apis.map(api => (
+                              <div key={api.id} className="bg-slate-800/50 rounded-lg p-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm font-medium text-white">{api.name}</p>
+                                    <p className="text-xs text-slate-500">{api.url}</p>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                      api.status === 'healthy' ? 'bg-green-500/20 text-green-400' :
+                                      api.status === 'degraded' ? 'bg-yellow-500/20 text-yellow-400' :
+                                      'bg-red-500/20 text-red-400'
+                                    }`}>
+                                      {api.status === 'healthy' ? '正常' :
+                                       api.status === 'degraded' ? '降级' :
+                                       '故障'}
+                                    </span>
+                                    <span className="text-xs text-slate-500">{api.latency}ms</span>
+                                  </div>
+                                </div>
+                                {api.error && (
+                                  <p className="text-xs text-red-400 mt-2">{api.error}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                <div className="mt-4 text-xs text-slate-500 text-center">
+                  自动刷新: 每 30 秒
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'data' && (
+              /* 数据状态监控 */
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-white">数据监控</h2>
+                  {monitoringLoading && (
+                    <span className="text-xs text-slate-500">刷新中...</span>
+                  )}
+                </div>
+
+                {dataStatusData?.summary && (
+                  <>
+                    {/* 总体统计 */}
+                    <div className="grid grid-cols-4 gap-4 mb-6">
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-white">{dataStatusData.summary.total}</p>
+                        <p className="text-xs text-slate-400 mt-1">总数</p>
+                      </div>
+                      <div className="bg-green-500/10 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-green-400">{dataStatusData.summary.active}</p>
+                        <p className="text-xs text-slate-400 mt-1">活跃</p>
+                      </div>
+                      <div className="bg-yellow-500/10 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-yellow-400">{dataStatusData.summary.stale}</p>
+                        <p className="text-xs text-slate-400 mt-1">过期</p>
+                      </div>
+                      <div className="bg-red-500/10 rounded-xl p-4 text-center">
+                        <p className="text-3xl font-bold text-red-400">{dataStatusData.summary.error}</p>
+                        <p className="text-xs text-slate-400 mt-1">错误</p>
+                      </div>
+                    </div>
+
+                    {/* 数据健康度 */}
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-slate-400">数据健康度</span>
+                        <span className="text-lg font-bold text-white">{dataStatusData.summary.healthPercentage}%</span>
+                      </div>
+                      <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            parseFloat(dataStatusData.summary.healthPercentage) >= 80 ? 'bg-green-500' :
+                            parseFloat(dataStatusData.summary.healthPercentage) >= 50 ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`}
+                          style={{ width: dataStatusData.summary.healthPercentage + '%' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 数据模块列表 */}
+                    <div className="space-y-3">
+                      {dataStatusData.modules.map(module => (
+                        <div key={module.id} className="bg-slate-800/50 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  module.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                                  module.status === 'stale' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {module.status === 'active' ? '活跃' :
+                                   module.status === 'stale' ? '过期' :
+                                   '错误'}
+                                </span>
+                                <span className="text-sm font-medium text-white">{module.name}</span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">{module.endpoint}</p>
+                            </div>
+                            <div className="flex items-center gap-6 text-sm">
+                              <div className="text-right">
+                                <p className="text-slate-400">数据点</p>
+                                <p className="text-white">{module.dataPoints}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-slate-400">延迟</p>
+                                <p className="text-white">{module.latency}ms</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-slate-400">更新</p>
+                                <p className="text-xs text-white">{formatTime(module.lastUpdate)}</p>
+                              </div>
+                            </div>
+                          </div>
+                          {module.error && (
+                            <p className="text-xs text-red-400 mt-2">{module.error}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                <div className="mt-4 text-xs text-slate-500 text-center">
+                  自动刷新: 每 30 秒
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -661,77 +891,6 @@ export default function AdminPage() {
           </p>
         </div>
       </div>
-
-      {/* 用户模态框 */}
-      {showUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-slate-700 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white">
-                {editingUserId ? '编辑用户' : '添加用户'}
-              </h3>
-              <button
-                onClick={() => setShowUserModal(false)}
-                className="text-slate-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  用户名
-                </label>
-                <input
-                  type="text"
-                  value={userForm.username}
-                  onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
-                  placeholder="请输入用户名"
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  密码 {editingUserId && '(留空保持不变)'}
-                </label>
-                <input
-                  type="password"
-                  value={userForm.password}
-                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                  placeholder={editingUserId ? '留空保持不变' : '请输入密码'}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  required={!editingUserId}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  角色
-                </label>
-                <select
-                  value={userForm.role}
-                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="user">用户</option>
-                  <option value="admin">管理员</option>
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? '保存中...' : '保存'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
