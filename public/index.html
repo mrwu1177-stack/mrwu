@@ -445,6 +445,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
+      table-layout: fixed;
     }
 
     .modal-data-table thead {
@@ -463,9 +464,20 @@
       white-space: nowrap;
     }
 
+    .modal-data-table th:nth-child(1) { width: 15%; }  /* 排名/交易对/币种 */
+    .modal-data-table th:nth-child(2) { width: 12%; }  /* 方向/数量/当前/价值 */
+    .modal-data-table th:nth-child(3) { width: 13%; }  /* 金额/价值/预测/OI */
+    .modal-data-table th:nth-child(4) { width: 13%; }  /* 价格/类型/24h/变化 */
+    .modal-data-table th:nth-child(5) { width: 17%; }  /* 时间/时间/7d/趋势 */
+    .modal-data-table th:nth-child(6) { width: 15%; }  /* 交易所 */
+    .modal-data-table th:nth-child(7) { width: 15%; }  /* 额外列 */
+
     .modal-data-table td {
       padding: 10px 8px;
       border-bottom: 1px solid #2b3139;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .modal-data-table tbody tr:hover {
@@ -775,24 +787,24 @@
       </div>
 
       <!-- 第四列：排行榜 -->
-      <div class="glass-card p-6 fade-in flex flex-col" style="animation-delay: 0.4s; max-height: 800px; min-height: 800px;">
+      <div class="glass-card p-6 fade-in flex flex-col" style="animation-delay: 0.4s; max-height: 700px;">
         <h2 class="text-xl font-bold text-white mb-4">排行榜</h2>
 
         <!-- 排行榜标签切换 -->
-        <div class="flex items-center gap-2 mb-4">
+        <div class="flex items-center gap-2 mb-4 flex-shrink-0">
           <button onclick="switchRankingType('top')" id="ranking-tab-top" class="ranking-tab active text-xs px-3 py-1.5 rounded-lg font-medium transition-all">涨幅榜</button>
           <button onclick="switchRankingType('bottom')" id="ranking-tab-bottom" class="ranking-tab text-xs px-3 py-1.5 rounded-lg font-medium transition-all">跌幅榜</button>
           <button onclick="switchRankingType('active')" id="ranking-tab-active" class="ranking-tab text-xs px-3 py-1.5 rounded-lg font-medium transition-all">活跃榜</button>
         </div>
 
         <!-- 排行榜内容 -->
-        <div id="market-data-ranking" class="market-data-content active flex-1 flex flex-col">
-          <div id="rankingLoading" class="text-center py-4">
+        <div id="market-data-ranking" class="market-data-content active flex flex-col min-h-0 flex-1">
+          <div id="rankingLoading" class="text-center py-4 flex-shrink-0">
             <div class="loading-spin inline-block w-8 h-8 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full mb-2"></div>
             <p class="text-sm text-slate-400">正在加载排行榜...</p>
           </div>
 
-          <div id="rankingContent" class="hidden overflow-y-auto flex-1 pr-1">
+          <div id="rankingContent" class="hidden overflow-y-auto flex-1 pr-1 min-h-0">
             <table class="w-full">
               <thead class="sticky top-0 bg-slate-900/95 z-10">
                 <tr class="text-left text-xs text-slate-400 border-b border-slate-700">
@@ -814,17 +826,36 @@
     <!-- 爆仓清算图 -->
     <div class="glass-card p-6 fade-in mb-6">
       <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-1">
           <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
           </svg>
           <h2 class="text-xl font-bold text-white">爆仓清算图</h2>
+
+          <!-- 快速选择币种 -->
+          <div class="flex items-center gap-2 ml-4">
+            <button
+              onclick="quickLoadCoin('BTC')"
+              class="coin-quick-btn text-xs px-3 py-1.5 rounded-lg font-medium transition-all bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 hover:bg-yellow-500/30"
+              data-coin="BTC"
+            >
+              BTC
+            </button>
+            <button
+              onclick="quickLoadCoin('ETH')"
+              class="coin-quick-btn text-xs px-3 py-1.5 rounded-lg font-medium transition-all bg-slate-700 text-slate-300 border border-slate-600 hover:bg-slate-600"
+              data-coin="ETH"
+            >
+              ETH
+            </button>
+          </div>
+
           <input
             type="text"
             id="liquidationCoinInput"
-            placeholder="交易对 (如 BTC)"
+            placeholder="输入其他币种"
             value="BTC"
-            class="ml-4 px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 w-32 transition-all"
+            class="ml-2 px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 w-32 transition-all"
           />
           <button
             onclick="loadCustomLiquidationCoin()"
@@ -1072,8 +1103,8 @@
 
         if (response.ok) {
           const data = await response.json();
-          // 检查数据是否有效（不是空数组）
-          if (Array.isArray(data) && data.length > 0) {
+          // 检查数据是否有效（不是空数组、null、undefined）
+          if (data && (Array.isArray(data) ? data.length > 0 : true)) {
             console.log(`✅ API 成功: ${url}`);
 
             // 记录成功日志
@@ -1256,6 +1287,27 @@
     }
 
     // ==================== 清算图功能 ====================
+
+    // 快速加载币种
+    function quickLoadCoin(coin) {
+      const input = document.getElementById('liquidationCoinInput');
+      input.value = coin;
+
+      // 更新按钮样式
+      document.querySelectorAll('.coin-quick-btn').forEach(btn => {
+        if (btn.dataset.coin === coin) {
+          btn.classList.remove('bg-slate-700', 'text-slate-300', 'border-slate-600');
+          btn.classList.add('bg-yellow-500/20', 'text-yellow-300', 'border-yellow-500/30');
+        } else {
+          btn.classList.remove('bg-yellow-500/20', 'text-yellow-300', 'border-yellow-500/30');
+          btn.classList.add('bg-slate-700', 'text-slate-300', 'border-slate-600');
+        }
+      });
+
+      currentLiquidationCoin = coin;
+      loadLiquidationMap();
+    }
+
     function loadCustomLiquidationCoin() {
       const input = document.getElementById('liquidationCoinInput');
       const coin = input.value.trim().toUpperCase();
@@ -1708,7 +1760,15 @@
 
     function drawLiquidationChart() {
       const canvas = document.getElementById('liquidationChart');
+      if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+      }
       const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('Failed to get canvas context');
+        return;
+      }
 
       // 设置canvas尺寸（支持高DPI）
       const container = canvas.parentElement;
