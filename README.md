@@ -2,19 +2,11 @@
 
 基于前后端分离架构的加密货币实时监控系统，支持WebSocket实时推送、数据持久化和移动端自适应。
 
-## 项目架构
-
-### 后端服务 (Port 5001)
-- **技术栈**: Node.js, Express, WebSocket, JSON文件存储
-- **功能**:
-  - 定时获取市场数据（CoinGecko API）
-  - 分析异动信号（24h涨跌幅>10%）
-  - 恐贪指数监控
-  - WebSocket实时数据推送
-  - 数据持久化存储（JSON文件）
+## 技术栈
 
 ### 前端应用 (Port 5000)
-- **技术栈**: Next.js 16, React 19, TypeScript, Tailwind CSS 4
+- **框架**: Next.js 14.2
+- **UI**: React 18.3, TypeScript, Tailwind CSS 4
 - **功能**:
   - 实时异动信号展示
   - 恐贪指数可视化
@@ -22,26 +14,41 @@
   - WebSocket实时更新
   - 移动端自适应
 
+### 后端服务 (Port 5001)
+- **框架**: Node.js, Express
+- **存储**: JSON文件存储
+- **功能**:
+  - 定时获取市场数据（CoinGecko API）
+  - 分析异动信号（24h涨跌幅>10%）
+  - 恐贪指数监控
+  - WebSocket实时数据推送
+  - 数据持久化存储
+
+## 系统要求
+
+- **Node.js**: >= 18.18.0 (推荐 20+)
+- **pnpm**: >= 8.0.0
+
 ## 启动方式
 
-### 方式1: 使用Coze CLI（推荐）
+### 开发环境
 
 ```bash
-# 启动开发环境（同时启动前端和后端）
+# 使用Coze CLI启动（推荐）
 cd /workspace/projects
 coze dev
+
+# 或手动启动
+cd /workspace/projects/server && node src/index.js &
+cd /workspace/projects/crypto-monitor && npx next dev --port 5000
 ```
 
-### 方式2: 手动启动
+### 生产环境
 
 ```bash
-# 启动后端服务
-cd /workspace/projects/server
-node src/index.js
-
-# 启动前端服务（新终端）
-cd /workspace/projects/crypto-monitor
-npx next dev --port 5000
+cd /workspace/projects
+pnpm run build
+pnpm run start
 ```
 
 ## API文档
@@ -156,7 +163,7 @@ ws://localhost:5001/ws
 /workspace/projects/
 ├── server/                    # 后端服务
 │   ├── src/
-│   │   ├── config/            # 数据库配置
+│   │   ├── config/            # 数据配置
 │   │   ├── models/            # 数据模型
 │   │   ├── services/          # API服务
 │   │   ├── utils/             # WebSocket工具
@@ -168,7 +175,13 @@ ws://localhost:5001/ws
 │   │   ├── app/               # 页面
 │   │   ├── hooks/             # React Hooks
 │   │   └── services/          # API服务
+│   ├── public/                # 静态资源
 │   └── package.json
+├── scripts/                   # 构建和启动脚本
+│   ├── build.sh              # 构建脚本
+│   ├── start.sh              # 启动脚本
+│   ├── prepare.sh            # 开发环境准备
+│   └── dev.sh                # 开发环境启动
 └── .coze                      # Coze CLI配置
 ```
 
@@ -184,6 +197,18 @@ ws://localhost:5001/ws
 
 1. 在 `server/src/utils/websocket.js` 添加广播方法
 2. 在 `crypto-monitor/src/hooks/useWebSocket.ts` 添加消息处理
+
+## 版本兼容性
+
+| 组件 | 版本 | Node.js要求 |
+|------|------|-------------|
+| Next.js | 14.2.x | >= 18.18.0 |
+| React | 18.3.x | - |
+| Node.js | 18+ | - |
+
+## 部署
+
+项目已配置为兼容Node.js 18+环境，可直接部署到支持Node.js 18的平台。
 
 ## 许可证
 
