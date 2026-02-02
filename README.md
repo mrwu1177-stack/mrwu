@@ -1,13 +1,35 @@
-# 加密货币异动监控系统
+# 加密货币分析平台
 
-基于前后端分离架构的加密货币实时监控系统，支持WebSocket实时推送、数据持久化和移动端自适应。
+专业的加密货币分析和监控系统，包含两个核心模块。
 
-## 技术栈
+## 🌟 功能模块
+
+### 1. HelloYan - 智能加密货币策略分析
+- 技术分析
+- 趋势预测
+- 投资建议
+- 访问路径: `/helloyan`
+
+### 2. Crypto Monitor - 加密货币异动监控
+- 实时价格异动监控
+- 恐贪指数追踪
+- 市场数据概览
+- WebSocket实时推送
+- 访问路径: `/monitor`
+
+## 🏠 首页导航
+
+访问首页 `https://mrwu-production.up.railway.app/` 可以看到：
+- **HelloYan** 卡片 - 点击进入策略分析系统
+- **Crypto Monitor** 卡片 - 点击进入异动监控系统
+
+## 📊 技术栈
 
 ### 前端应用 (Port 5000)
 - **框架**: Next.js 14.2
 - **UI**: React 18.3, TypeScript, Tailwind CSS 4
 - **功能**:
+  - 响应式导航首页
   - 实时异动信号展示
   - 恐贪指数可视化
   - 市场数据概览
@@ -24,12 +46,12 @@
   - WebSocket实时数据推送
   - 数据持久化存储
 
-## 系统要求
+## 🔧 系统要求
 
 - **Node.js**: >= 18.18.0 (推荐 20+)
 - **pnpm**: >= 8.0.0
 
-## 启动方式
+## 🚀 启动方式
 
 ### 开发环境
 
@@ -51,7 +73,7 @@ pnpm run build
 pnpm run start
 ```
 
-## API文档
+## 📡 API文档
 
 ### 健康检查
 ```
@@ -78,7 +100,7 @@ GET http://localhost:5001/api/fear-greed
 GET http://localhost:5001/api/global-market
 ```
 
-## WebSocket连接
+## 🔗 WebSocket连接
 
 ```
 ws://localhost:5001/ws
@@ -131,7 +153,7 @@ ws://localhost:5001/ws
 }
 ```
 
-## 数据持久化
+## 💾 数据持久化
 
 数据存储在 `/workspace/projects/server/data/` 目录下：
 
@@ -139,12 +161,12 @@ ws://localhost:5001/ws
 - `market.json` - 市场数据
 - `fear-greed.json` - 恐贪指数历史
 
-## 定时任务
+## ⏰ 定时任务
 
 - **每分钟**: 刷新市场数据并推送
 - **每天凌晨3点**: 清理7天前的异动信号和30天前的恐贪指数
 
-## 注意事项
+## ⚠️ 注意事项
 
 1. **API限流**: 当前使用CoinGecko API，有请求频率限制。当API不可用时，系统会自动切换到模拟数据模式。
 
@@ -157,7 +179,7 @@ ws://localhost:5001/ws
    - 后端: 5001
    - WebSocket: 5001/ws
 
-## 项目结构
+## 📁 项目结构
 
 ```
 /workspace/projects/
@@ -173,6 +195,9 @@ ws://localhost:5001/ws
 ├── crypto-monitor/            # 前端应用
 │   ├── src/
 │   │   ├── app/               # 页面
+│   │   │   ├── page.tsx       # 首页（导航）
+│   │   │   ├── monitor/       # 加密货币监控
+│   │   │   └── helloyan/      # 策略分析（待实现）
 │   │   ├── hooks/             # React Hooks
 │   │   └── services/          # API服务
 │   ├── public/                # 静态资源
@@ -185,7 +210,13 @@ ws://localhost:5001/ws
 └── .coze                      # Coze CLI配置
 ```
 
-## 开发指南
+## 🛠️ 开发指南
+
+### 添加新的路由
+
+1. 在 `crypto-monitor/src/app/` 下创建新目录
+2. 添加 `page.tsx` 文件
+3. 在首页添加导航链接
 
 ### 添加新的API端点
 
@@ -198,7 +229,7 @@ ws://localhost:5001/ws
 1. 在 `server/src/utils/websocket.js` 添加广播方法
 2. 在 `crypto-monitor/src/hooks/useWebSocket.ts` 添加消息处理
 
-## 版本兼容性
+## 📦 版本兼容性
 
 | 组件 | 版本 | Node.js要求 |
 |------|------|-------------|
@@ -206,10 +237,16 @@ ws://localhost:5001/ws
 | React | 18.3.x | - |
 | Node.js | 18+ | - |
 
-## 部署
+## 🌐 部署
 
 项目已配置为兼容Node.js 18+环境，可直接部署到支持Node.js 18的平台。
 
-## 许可证
+### 部署后访问
+
+- 首页: `https://mrwu-production.up.railway.app/`
+- 加密货币监控: `https://mrwu-production.up.railway.app/monitor`
+- 策略分析: `https://mrwu-production.up.railway.app/helloyan`（待实现）
+
+## 📄 许可证
 
 MIT

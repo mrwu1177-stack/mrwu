@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Crypto Monitor - 加密货币异动监控',
-  description: '实时监控加密货币价格异动、市场数据和恐贪指数',
+  title: 'MrWu - 加密货币分析平台',
+  description: '专业的加密货币分析和监控系统',
 };
 
 export default function RootLayout({
